@@ -1,82 +1,112 @@
-import { createContext, useState } from "react";
+/**
+ * AuthContext.jsx
+ * React Context for managing authentication state with JWT tokens.
+ * Persists token in localStorage to maintain state on page refresh.
+ * Handles login, registration, and logout with axios API calls.
+ * Includes LiFi-specific role-based access control.
+ */
+import { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import PropTypes from "prop-types";
 
 const AuthContext = createContext();
 
 export default AuthContext;
 
-function setUserObject(user) {
-  if (!user) {
-    return null;
-  }
-  return {
-    username: user.username,
-    id: user.user_id,
-    first_name: user.first_name,
-  };
-}
-
 export const AuthProvider = ({ children }) => {
   const BASE_URL = "http://127.0.0.1:8000/api/auth";
-  const userToken = JSON.parse(localStorage.getItem("token"));
-  const decodedUser = userToken ? jwtDecode(userToken) : null;
-  const [token, setToken] = useState(userToken);
-  const [user, setUser] = useState(setUserObject(decodedUser));
-  const [isServerError, setIsServerError] = useState(false);
   const navigate = useNavigate();
+
+  // Initialize state from localStorage
+  const initialToken = localStorage.getItem("token");
+  const [token, setToken] = useState(initialToken || null);
+  const [user, setUser] = useState(null);
+  const [isServerError, setIsServerError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Sync user state when token changes
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        // Check token expiration
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp < currentTime) {
+          logoutUser("Session expired. Please log in again.");
+          return;
+        }
+        setUser({
+          username: decoded.username,
+          id: decoded.user_id,
+          first_name: decoded.first_name,
+          role: decoded.role || "user", // LiFi-specific: role-based access
+        });
+      } catch (error) {
+        console.error("Invalid token:", error);
+        logoutUser("Invalid token. Please log in again.");
+      }
+    } else {
+      setUser(null);
+    }
+  }, [token]);
 
   const registerUser = async (registerData) => {
     try {
-      let finalData = {
+      const finalData = {
         username: registerData.username,
         password: registerData.password,
         email: registerData.email,
         first_name: registerData.firstName,
         last_name: registerData.lastName,
       };
-      let response = await axios.post(`${BASE_URL}/register/`, finalData);
+      const response = await axios.post(`${BASE_URL}/register/`, finalData);
       if (response.status === 201) {
-        console.log("Successful registration! Log in to access token");
         setIsServerError(false);
+        setErrorMessage("");
         navigate("/login");
-      } else {
-        navigate("/register");
+        return { success: true };
       }
     } catch (error) {
-      console.log(error.response.data);
+      setIsServerError(true);
+      setErrorMessage(error.response?.data?.detail || "Registration failed");
+      navigate("/register");
+      return { success: false, error: error.response?.data };
     }
   };
 
   const loginUser = async (loginData) => {
     try {
-      let response = await axios.post(`${BASE_URL}/login/`, loginData);
+      const response = await axios.post(`${BASE_URL}/login/`, loginData);
       if (response.status === 200) {
-        localStorage.setItem("token", JSON.stringify(response.data.access));
-        setToken(JSON.parse(localStorage.getItem("token")));
-        let loggedInUser = jwtDecode(response.data.access);
-        setUser(setUserObject(loggedInUser));
+        const newToken = response.data.access;
+        localStorage.setItem("token", newToken);
+        setToken(newToken);
         setIsServerError(false);
+        setErrorMessage("");
         navigate("/");
-      } else {
-        navigate("/register");
+        return { success: true };
       }
     } catch (error) {
-      console.log(error.response.data);
       setIsServerError(true);
-      navigate("/register");
+      setErrorMessage(error.response?.data?.detail || "Login failed");
+      navigate("/login"); // Stay on login page to retry
+      return { success: false, error: error.response?.data };
     }
   };
 
-  const logoutUser = () => {
-    if (user) {
-      localStorage.removeItem("token");
-      setUser(null);
-      setToken(null);
-      navigate("/");
-    }
+  const logoutUser = (message = "") => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    setIsServerError(!!message);
+    setErrorMessage(message);
+    navigate("/");
   };
+
+  // LiFi-specific: Check if user is admin
+  const isAdmin = () => user?.role === "admin";
 
   const contextData = {
     user,
@@ -85,9 +115,17 @@ export const AuthProvider = ({ children }) => {
     logoutUser,
     registerUser,
     isServerError,
+    errorMessage,
+    isAdmin, // LiFi-specific: Expose admin check
   };
 
   return (
-    <AuthContext.Provider value={contextData}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={contextData}>
+      {children}
+    </AuthContext.Provider>
   );
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };

@@ -1,16 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
-import { BrowserRouter as Router } from "react-router-dom";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import { AuthProvider } from './context/AuthContext';
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
-    <Router>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </Router>
-  </React.StrictMode>,
-  document.getElementById("root")
+    </BrowserRouter>
+  </React.StrictMode>
 );

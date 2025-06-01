@@ -1,0 +1,102 @@
+/* Error message styling */
+.error {
+  color: #dc3545; /* Bootstrap's danger red */
+}
+
+/* Global text color and background */
+body {
+  color: #212529; /* Bootstrap's dark text */
+  background-color: #f8f9fa; /* Bootstrap's light gray */
+}
+
+/* Register container styling */
+.register-container {
+  max-width: 28rem;
+  width: 100%;
+}
+
+/* Section styling for scroll margin */
+section {
+  scroll-margin-top: 5rem; /* For sticky nav */
+}
+
+/* Custom teal button styling */
+.btn-teal {
+  background-color: #0d9488; /* Custom teal */
+  border-color: #0d9488;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  color: #fff;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+.btn-teal:hover {
+  background-color: #0f766e; /* Darker teal */
+  border-color: #0f766e;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-teal:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.5); /* Teal focus ring */
+}
+
+/* Custom teal link styling */
+.link-teal {
+  background-color: #0d9488; /* Custom teal */
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.link-teal:hover {
+  background-color: #0f766e; /* Darker teal */
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.link-teal:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(13, 148, 136, 0.5); /* Teal focus ring */
+}
+
+/* Ensure readable input text */
+input.form-control {
+  color: #212529; /* Bootstrap's dark text */
+}
+
+/* Form label styling */
+.form-label {
+  color: #212529;
+  font-weight: 500;
+}
+
+/* Small text for password note */
+.form-text {
+  font-size: 0.875rem;
+}
+
+/* Field wrapper for animation */
+.field-wrapper {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.field-wrapper.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.field-wrapper.hidden {
+  display: none;
+}
+
+/* Hidden form log storage */
+.form-log {
+  display: none;
+}
